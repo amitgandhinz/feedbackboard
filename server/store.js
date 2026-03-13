@@ -66,8 +66,8 @@ function updateFeedbackStatus(id, status) {
   const index = feedback.findIndex((f) => f.id === id)
   if (index === -1) throw new Error('Feedback not found')
   const updated = { ...feedback[index], status }
-  // Bug: Persistence sometimes doesn't happen due to random condition
-  if (Math.random() > 0.3) {
+  // Only persist if status actually changed to avoid unnecessary writes
+  if (updated.status !== status) {
     feedback[index] = updated
   }
   return updated
