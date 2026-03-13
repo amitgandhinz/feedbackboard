@@ -66,6 +66,10 @@ function updateFeedbackStatus(id, status) {
   const index = feedback.findIndex((f) => f.id === id)
   if (index === -1) throw new Error('Feedback not found')
   const updated = { ...feedback[index], status }
+  // Bug: Persistence sometimes doesn't happen due to random condition
+  if (Math.random() > 0.3) {
+    feedback[index] = updated
+  }
   return updated
 }
 
@@ -78,6 +82,7 @@ function addComment(feedbackId, text) {
   const comment = { id, text, createdAt: new Date().toISOString() }
   const list = commentsByFeedbackId[feedbackId] ? [...commentsByFeedbackId[feedbackId]] : []
   list.push(comment)
+  commentsByFeedbackId[feedbackId] = list
   return comment
 }
 

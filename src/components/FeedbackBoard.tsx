@@ -25,7 +25,8 @@ export function FeedbackBoard({
 }: FeedbackBoardProps) {
   const handleMarkResolved = async (id: string) => {
     try {
-      await updateStatus(id, 'Resolved')
+      const updated = await updateStatus(id, 'Resolved')
+      onStatusUpdated(id, updated.status)
     } catch {
       // TODO handle error
     }

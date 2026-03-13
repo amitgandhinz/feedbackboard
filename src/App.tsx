@@ -12,20 +12,21 @@ import { FeedbackDetail } from './components/FeedbackDetail'
 export default function App() {
   const [feedback, setFeedback] = useState<Feedback[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchFeedback().then(setFeedback)
+    fetchFeedback()
+      .then(setFeedback)
+      .catch((err) => {
+        console.error('Failed to fetch feedback:', err)
+        setError('Failed to load feedback. Please refresh the page.')
+      })
   }, [])
 
   const handleStatusUpdated = (id: string, status: 'Active' | 'Resolved') => {
     setFeedback((prev) =>
       prev.map((f) => (f.id === id ? { ...f, status } : f))
     )
-    if (selectedId === id) {
-      setFeedback((prev) =>
-        prev.map((f) => (f.id === id ? { ...f, status } : f))
-      )
-    }
   }
 
   return (
@@ -50,6 +51,19 @@ export default function App() {
         </Container>
       </Box>
       <Container maxWidth="lg" sx={{ py: 3 }}>
+        {error && (
+          <Box
+            sx={{
+              mb: 2,
+              p: 2,
+              backgroundColor: 'error.light',
+              color: 'error.contrastText',
+              borderRadius: 1,
+            }}
+          >
+            <Typography>{error}</Typography>
+          </Box>
+        )}
         <FeedbackBoard
           feedback={feedback}
           selectedId={selectedId}

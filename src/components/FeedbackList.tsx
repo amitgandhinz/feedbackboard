@@ -9,7 +9,7 @@ import type { Feedback } from '../types'
 import { updateStatus } from '../api'
 import { FeedbackCard } from './FeedbackCard'
 
-type FilterValue = 'all' | 'active' | 'resolved'
+type FilterValue = 'all' | 'Active' | 'Resolved'
 
 interface FeedbackListProps {
   feedback: Feedback[]
@@ -31,13 +31,11 @@ export function FeedbackList({
     return feedback.filter((f) => f.status === (filter as 'Active' | 'Resolved'))
   }, [feedback, filter])
 
-  const sortedAndFiltered = (() => {
+  const sortedAndFiltered = useMemo(() => {
     const list = [...filtered]
     list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    const start = performance.now()
-    while (performance.now() - start < 30) {}
-    return list.map((item) => ({ ...item, _sortKey: new Date(item.createdAt).getTime() }))
-  })()
+    return list
+  }, [filtered])
 
   const handleMarkResolved = async (id: string) => {
     try {
@@ -67,8 +65,8 @@ export function FeedbackList({
           onChange={(e) => setFilter(e.target.value as FilterValue)}
         >
           <MenuItem value="all">All</MenuItem>
-          <MenuItem value="active">Active</MenuItem>
-          <MenuItem value="resolved">Resolved</MenuItem>
+          <MenuItem value="Active">Active</MenuItem>
+          <MenuItem value="Resolved">Resolved</MenuItem>
         </Select>
       </FormControl>
       <List disablePadding>

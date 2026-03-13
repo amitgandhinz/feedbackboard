@@ -15,27 +15,58 @@ interface FeedbackDetailProps {
 
 export function FeedbackDetail({ feedbackId, onStatusUpdated, onClose }: FeedbackDetailProps) {
   const [feedback, setFeedback] = useState<Feedback | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchFeedbackById(feedbackId).then(setFeedback)
+    fetchFeedbackById(feedbackId)
+      .then(setFeedback)
+      .catch((err) => {
+        console.error('Failed to fetch feedback:', err)
+        setError('Failed to load feedback details.')
+      })
   }, [feedbackId])
 
   if (!feedback) return null
 
   const handleMarkResolved = async () => {
-    const updated = await updateStatus(feedbackId, 'Resolved')
-    setFeedback(updated)
-    onStatusUpdated(feedbackId, 'Resolved')
+    try {
+      const updated = await updateStatus(feedbackId, 'Resolved')
+      setFeedback(updated)
+      onStatusUpdated(feedbackId, 'Resolved')
+      setError(null)
+    } catch (err) {
+      console.error('Failed to update status:', err)
+      setError('Failed to mark as resolved. Please try again.')
+    }
   }
 
   const handleReopen = async () => {
-    const updated = await updateStatus(feedbackId, 'Active')
-    setFeedback(updated)
-    onStatusUpdated(feedbackId, 'Active')
+    try {
+      const updated = await updateStatus(feedbackId, 'Active')
+      setFeedback(updated)
+      onStatusUpdated(feedbackId, 'Active')
+      setError(null)
+    } catch (err) {
+      console.error('Failed to update status:', err)
+      setError('Failed to reopen. Please try again.')
+    }
   }
 
   return (
     <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2 }}>
+      {error && (
+        <Box
+          sx={{
+            mb: 2,
+            p: 1.5,
+            backgroundColor: 'error.light',
+            color: 'error.contrastText',
+            borderRadius: 1,
+          }}
+        >
+          <Typography variant="body2">{error}</Typography>
+        </Box>
+      )}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
         <Typography variant="h6">{feedback.title}</Typography>
         <Chip label={feedback.status} color={feedback.status === 'Resolved' ? 'success' : 'default'} />

@@ -14,37 +14,64 @@ const PORT = 3001
 app.use(cors())
 app.use(express.json())
 
-app.get('/api/feedback', (req, res) => {
+// Async error handler wrapper
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next)
+}
+
+app.get('/api/feedback', asyncHandler((req, res) => {
   const list = getFeedback()
   res.json(list)
-})
+}))
 
-app.get('/api/feedback/:id', (req, res) => {
-  const item = getFeedbackById(req.params.id)
-  res.json(item)
-})
+app.get('/api/feedback/:id', asyncHandler((req, res) => {
+  try {
+    const item = getFeedbackById(req.params.id)
+    res.json(item)
+  } catch (err) {
+    res.status(404).json({ error: err.message })
+  }
+}))
 
-app.patch('/api/feedback/:id', (req, res) => {
+app.patch('/api/feedback/:id', asyncHandler((req, res) => {
   const { status } = req.body
   if (!status) {
     return res.status(400).json({ error: 'status is required' })
   }
-  const updated = updateFeedbackStatus(req.params.id, status)
-  res.json(updated)
-})
+  if (status !== 'Active' && status !== 'Resolved') {
+    return res.status(400).json({ error: 'status must be either "Active" or "Resolved"' })
+  }
+  try {
+    const updated = updateFeedbackStatus(req.params.id, status)
+    res.json(updated)
+  } catch (err) {
+    res.status(404).json({ error: err.message })
+  }
+}))
 
-app.get('/api/feedback/:id/comments', (req, res) => {
+app.get('/api/feedback/:id/comments', asyncHandler((req, res) => {
   const comments = getComments(req.params.id)
   res.json(comments)
-})
+}))
 
-app.post('/api/feedback/:id/comments', (req, res) => {
+app.post('/api/feedback/:id/comments', asyncHandler((req, res) => {
   const { text } = req.body
   if (!text || typeof text !== 'string') {
     return res.status(400).json({ error: 'text is required' })
   }
+  if (!text.trim()) {
+    return res.status(400).json({ error: 'comment text cannot be empty' })
+  }
   const comment = addComment(req.params.id, text)
   res.status(201).json(comment)
+}))
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Error:', err)
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error',
+  })
 })
 
 app.listen(PORT, () => {

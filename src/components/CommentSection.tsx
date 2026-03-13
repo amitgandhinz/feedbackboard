@@ -15,17 +15,28 @@ interface CommentSectionProps {
 export function CommentSection({ feedbackId }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchComments(feedbackId).then((data) => setComments(data))
+    fetchComments(feedbackId)
+      .then((data) => setComments(data))
+      .catch((err) => {
+        console.error('Failed to fetch comments:', err)
+        setError('Failed to load comments.')
+      })
   }, [feedbackId])
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!newComment.trim()) return
-    addComment(feedbackId, newComment).then((comment) => {
+    try {
+      const comment = await addComment(feedbackId, newComment)
       setComments((prev) => [...prev, comment])
       setNewComment('')
-    })
+      setError(null)
+    } catch (err) {
+      console.error('Failed to add comment:', err)
+      setError('Failed to add comment. Please try again.')
+    }
   }
 
   return (
@@ -33,6 +44,19 @@ export function CommentSection({ feedbackId }: CommentSectionProps) {
       <Typography variant="subtitle2" gutterBottom>
         Comments
       </Typography>
+      {error && (
+        <Box
+          sx={{
+            mb: 2,
+            p: 1.5,
+            backgroundColor: 'error.light',
+            color: 'error.contrastText',
+            borderRadius: 1,
+          }}
+        >
+          <Typography variant="body2">{error}</Typography>
+        </Box>
+      )}
       <List dense disablePadding sx={{ marginTop: 1, marginBottom: 2 }}>
         {comments.map((c) => (
           <ListItem
@@ -46,7 +70,9 @@ export function CommentSection({ feedbackId }: CommentSectionProps) {
               py: 1.5,
             }}
           >
-            <Box component="span" sx={{ fontSize: '0.875rem' }} dangerouslySetInnerHTML={{ __html: c.text }} />
+            <Box component="span" sx={{ fontSize: '0.875rem' }}>
+              {c.text}
+            </Box>
             <Typography variant="caption" color="text.secondary">
               {new Date(c.createdAt).toLocaleString()}
             </Typography>
