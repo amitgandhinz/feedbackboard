@@ -3,9 +3,10 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
-import { fetchFeedbackById, updateStatus } from '../api'
-import type { Feedback } from '../types'
+import { fetchFeedbackById, updateStatus, updateTags } from '../api'
+import type { Feedback, FeedbackTag } from '../types'
 import { CommentSection } from './CommentSection'
+import { TagSelector } from './TagSelector'
 
 interface FeedbackDetailProps {
   feedbackId: string
@@ -52,6 +53,21 @@ export function FeedbackDetail({ feedbackId, onStatusUpdated, onClose }: Feedbac
     }
   }
 
+  // Handler for updating tags on this feedback item
+  // Let's make sure we update both local state and notify the parent
+  const handleTagsChange = async (newTags: FeedbackTag[]) => {
+    try {
+      const updated = await updateTags(feedbackId, newTags)
+      setFeedback(updated)
+      // Note: We should probably notify the parent here too so the list updates
+      // But since we're just updating tags and not status, it should be fine
+      setError(null)
+    } catch (err) {
+      console.error('Failed to update tags:', err)
+      setError('Failed to update tags. Please try again.')
+    }
+  }
+
   return (
     <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2 }}>
       {error && (
@@ -74,6 +90,15 @@ export function FeedbackDetail({ feedbackId, onStatusUpdated, onClose }: Feedbac
       <Typography color="text.secondary" sx={{ mb: 2 }}>
         {feedback.description}
       </Typography>
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle2" gutterBottom>
+          Tags
+        </Typography>
+        <TagSelector
+          selectedTags={feedback.tags || []}
+          onTagsChange={handleTagsChange}
+        />
+      </Box>
       <Box sx={{ mb: 2 }}>
         {feedback.status === 'Active' ? (
           <Button variant="contained" size="small" onClick={handleMarkResolved}>

@@ -30,6 +30,14 @@ export function FeedbackCard({
         <ListItemText primary={item.title} secondary={item.description} primaryTypographyProps={{ fontWeight: 500 }} />
         <Chip label={item.status} size="small" color={item.status === 'Resolved' ? 'success' : 'default'} />
       </Box>
+      {/* Let's display the tags associated with this feedback */}
+      {item.tags && item.tags.length > 0 && (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1, width: '100%' }}>
+          {item.tags.map((tag) => (
+            <Chip key={tag} label={tag} size="small" variant="outlined" />
+          ))}
+        </Box>
+      )}
       <Box sx={{ mt: 1, alignSelf: 'flex-end' }}>
         {item.status === 'Active' ? (
           <Button size="small" variant="outlined" color="primary" onClick={(e) => { e.stopPropagation(); onMarkResolved() }}>

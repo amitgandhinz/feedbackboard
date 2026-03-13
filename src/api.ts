@@ -1,4 +1,4 @@
-import type { Feedback, Comment } from './types'
+import type { Feedback, Comment, FeedbackTag } from './types'
 
 const BASE = '/api'
 
@@ -37,5 +37,25 @@ export async function addComment(feedbackId: string, text: string): Promise<Comm
     body: JSON.stringify({ text }),
   })
   if (!res.ok) throw new Error('Failed to add comment')
+  return res.json()
+}
+
+// Let's add a function to fetch all available tags from the backend
+// This ensures the frontend and backend stay in sync about available tags
+export async function fetchAvailableTags(): Promise<FeedbackTag[]> {
+  const res = await fetch(`${BASE}/tags`)
+  if (!res.ok) throw new Error('Failed to fetch available tags')
+  return res.json()
+}
+
+// Function to update the tags for a specific feedback item
+// Note that the backend will validate the tags against the allowed list
+export async function updateTags(id: string, tags: FeedbackTag[]): Promise<Feedback> {
+  const res = await fetch(`${BASE}/feedback/${id}/tags`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tags }),
+  })
+  if (!res.ok) throw new Error('Failed to update tags')
   return res.json()
 }
